@@ -1,0 +1,40 @@
+#! /bin/sh
+
+PLATFORM="linux/amd64,linux/arm64"
+IMAGE="jlmbrt/ping-pong"
+TAG=
+OUTPUT=
+
+usage() {
+	echo "Usage: build <-t tag> <-o (push/load)>"
+}
+
+err_exit() {
+	if ! [ -z "$1" ]; then echo "⛔️ $1"; fi
+	usage
+	exit 1
+}
+
+while getopts "o:t:" option; do
+	case "${option}" in
+	o)
+		OUTPUT="--"${OPTARG}
+		;;
+	t)
+		TAG=${OPTARG}
+		;;
+	esac
+done
+
+shift $((OPTIND - 1))
+
+if [ -z "$TAG" ]; then
+	err_exit "Missing tag"
+fi
+
+if [ -z "$OUTPUT" ]; then
+	err_exit "Missing output"
+fi
+
+docker buildx build --platform ${PLATFORM} -t ${IMAGE}:${TAG} ${OUTPUT} .
+docker buildx build --platform ${PLATFORM} -t ${IMAGE}:latest ${OUTPUT} .
